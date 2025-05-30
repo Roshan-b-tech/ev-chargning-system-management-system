@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { useAuthStore } from './stores/auth';
-import { useChargingStationStore } from './stores/chargingStations.ts';
 import Navbar from './components/layout/Navbar.vue';
 import Footer from './components/layout/Footer.vue';
 
 const authStore = useAuthStore();
-const stationStore = useChargingStationStore();
 
 onMounted(async () => {
   await authStore.initAuth();

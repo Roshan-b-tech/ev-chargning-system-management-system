@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useChargingStationStore } from '../stores/chargingStations.ts';
 import { useAuthStore } from '../stores/auth';

@@ -1,8 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { useChargingStationStore } from '../stores/chargingStation'
-import type { AxiosError } from 'axios'
-import { useToast } from 'vue-toastification'
 
 import Home from '../views/Home.vue'
 import Login from '../views/LoginView.vue'
@@ -52,17 +49,17 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/add-station',
+      path: '/station/add',
       name: 'add-station',
       component: AddEditStation,
       meta: { requiresAuth: true }
     },
     {
-      path: '/edit-station/:id',
+      path: '/station/:id/edit',
       name: 'edit-station',
       component: AddEditStation,
       meta: { requiresAuth: true },
-      beforeEnter: async (to, from, next) => {
+      beforeEnter: async (to,_from, next) => {
         console.group('Router: beforeEnter for edit-station');
         console.log('to.params.id:', to.params.id, 'type:', typeof to.params.id);
 
@@ -120,7 +117,7 @@ const router = createRouter({
   ]
 })
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
 
   // Initialize auth if not already initialized

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import type { ChargingStation } from '../../types/chargingStation'
 
 const props = defineProps<{

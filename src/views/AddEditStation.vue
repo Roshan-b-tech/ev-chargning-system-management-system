@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, watchEffect, nextTick } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router';
 import { useChargingStationStore } from '../stores/chargingStations.ts';
 import type { ChargingStation } from '../types/chargingStation';
-import { useAuthStore } from '../stores/auth';
 import { connectorTypes, stationStatusOptions } from '../config';
 import MapComponent from '../components/ui/MapComponent.vue';
 import { useToast } from 'vue-toastification';
@@ -11,7 +10,6 @@ import { useToast } from 'vue-toastification';
 const router = useRouter();
 const route = useRoute();
 const stationStore = useChargingStationStore();
-const authStore = useAuthStore();
 const toast = useToast();
 
 // Determine if we're editing or adding
@@ -132,7 +130,7 @@ watch(
 );
 
 // Guard for navigation between edit routes (station/:id/edit -> station/:otherId/edit)
-onBeforeRouteUpdate(async (to, from, next) => {
+onBeforeRouteUpdate(async (to, _from, next) => {
   console.log('AddEditStation: onBeforeRouteUpdate - to.params.id:', to.params.id);
   const newId = to.params.id;
   // Rely on the robust check in loadStationData
