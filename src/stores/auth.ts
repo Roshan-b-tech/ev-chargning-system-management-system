@@ -74,15 +74,14 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(email: string, password: string) {
     loading.value = true;
     try {
-      console.log('Environment:', import.meta.env);
-      console.log('API Base URL:', apiBaseUrl);
-      const loginUrl = `${apiBaseUrl}/auth/login`;
-      console.log('Full login URL:', loginUrl);
-      console.log('Request payload:', { email, password });
-
-      const response = await axios.post(loginUrl, {
+      console.log('Attempting login with:', { email, apiBaseUrl });
+      const response = await axios.post(`${apiBaseUrl}/auth/login`, {
         email,
         password
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       console.log('Login response:', response.data);
@@ -117,7 +116,6 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       const response = await axios.get(`${apiBaseUrl}/auth/me`, getHeaders())
-
       user.value = response.data
       return response.data
     } catch (error) {
