@@ -66,6 +66,11 @@ app.post('/api/seed-data', async (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/charging-stations', authenticateJWT, stationRoutes);
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'API is running' });
+});
+
 // Root route
 app.get('/', (req, res) => {
   res.json({ message: 'EV Charging Station API' });

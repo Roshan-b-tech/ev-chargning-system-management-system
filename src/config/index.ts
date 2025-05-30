@@ -25,4 +25,4 @@ export const powerOutputOptions = [
     { min: 350, max: 1000, label: 'Ultra-Fast (350+ kW)' }
 ];
 
-export const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://ev-chargning-system-management-system.onrender.com/api'; 
+export const apiBaseUrl = 'https://ev-chargning-system-management-system.onrender.com/api'; 

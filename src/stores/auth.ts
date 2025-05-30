@@ -74,6 +74,8 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(email: string, password: string) {
     loading.value = true;
     try {
+      console.log('Environment:', import.meta.env);
+      console.log('API Base URL:', apiBaseUrl);
       const loginUrl = `${apiBaseUrl}/auth/login`;
       console.log('Full login URL:', loginUrl);
       console.log('Request payload:', { email, password });
@@ -99,7 +101,8 @@ export const useAuthStore = defineStore('auth', () => {
         statusText: error.response?.statusText,
         data: error.response?.data,
         url: error.config?.url,
-        method: error.config?.method
+        method: error.config?.method,
+        baseURL: error.config?.baseURL
       });
       const message = error.response?.data?.message || 'Login failed';
       toast.error(message);
