@@ -16,11 +16,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
@@ -65,11 +61,6 @@ app.post('/api/seed-data', async (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/charging-stations', authenticateJWT, stationRoutes);
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'API is running' });
-});
 
 // Root route
 app.get('/', (req, res) => {

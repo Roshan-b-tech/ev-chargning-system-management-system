@@ -1,11 +1,57 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import axios from 'axios';
 import { useToast } from 'vue-toastification';
 import { useAuthStore } from './auth';
 import type { ChargingStation } from '../types/chargingStation';
-import { api } from '../services/api';
+import { apiBaseUrl } from '../config';
 
-export const useChargingStationsStore = defineStore('chargingStations', () => {
+// Create axios instance with interceptors
+const api = axios.create({
+    baseURL: apiBaseUrl,
+    timeout: 10000,
+});
+
+// Request interceptor
+api.interceptors.request.use(
+    (config) => {
+        console.log('Request:', {
+            url: config.url,
+            method: config.method,
+            headers: config.headers,
+            data: config.data
+        });
+        return config;
+    },
+    (error) => {
+        console.error('Request Error:', error);
+        return Promise.reject(error);
+    }
+);
+
+// Response interceptor
+api.interceptors.response.use(
+    (response) => {
+        console.log('Response:', {
+            status: response.status,
+            data: response.data
+        });
+        return response;
+    },
+    (error) => {
+        console.error('Response Error:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message
+        });
+        return Promise.reject(error);
+    }
+);
+
+export const useChargingStationStore = defineStore('chargingStations', () => {
+    const toast = useToast();
+    const authStore = useAuthStore();
+
     const stations = ref<ChargingStation[]>([]);
     const selectedStation = ref<ChargingStation | null>(null);
     const filters = ref({
@@ -13,10 +59,8 @@ export const useChargingStationsStore = defineStore('chargingStations', () => {
         connectorType: '',
         minPower: 0
     });
-    const loading = ref(false);
+    const isLoading = ref(false);
     const error = ref<string | null>(null);
-    const toast = useToast();
-    const authStore = useAuthStore();
 
     const getHeaders = () => {
         if (!authStore.isAuthenticated) {
@@ -34,14 +78,27 @@ export const useChargingStationsStore = defineStore('chargingStations', () => {
         return headers;
     };
 
-    async function fetchStations() {
-        loading.value = true;
-        error.value = null;
+    const fetchStations = async () => {
+        if (isLoading.value) {
+            console.log('Fetch already in progress, skipping...');
+            return;
+        }
+
         try {
             console.log('Starting fetchStations...');
-            const response = await api.get('/api/charging-stations', {
-                headers: getHeaders()
-            });
+            isLoading.value = true;
+            error.value = null;
+
+            if (!authStore.isAuthenticated) {
+                console.error('Authentication check failed in fetchStations');
+                throw new Error('User must be authenticated to fetch stations');
+            }
+
+            const headers = getHeaders();
+            console.log('Making API request to fetch stations...');
+
+            const response = await api.get('/charging-stations', { headers });
+
             console.log('Stations fetched successfully:', response.data);
             console.log('First station data structure:', response.data[0] ? JSON.stringify(response.data[0], null, 2) : 'No stations');
 
@@ -51,6 +108,8 @@ export const useChargingStationsStore = defineStore('chargingStations', () => {
                 id: station._id,
                 _id: undefined
             }));
+
+            return stations.value;
         } catch (err: any) {
             console.error('Error fetching stations:', {
                 message: err.message,
@@ -60,67 +119,108 @@ export const useChargingStationsStore = defineStore('chargingStations', () => {
             });
             error.value = err.response?.data?.message || 'Failed to fetch charging stations';
             toast.error(error.value);
+            throw err;
         } finally {
-            loading.value = false;
+            isLoading.value = false;
         }
-    }
+    };
 
-    async function addStation(station: Omit<ChargingStation, 'id'>) {
-        loading.value = true;
-        error.value = null;
+    const createStation = async (stationData: Omit<ChargingStation, 'id' | 'createdAt' | 'updatedAt'>) => {
         try {
-            const response = await api.post('/api/charging-stations', station, {
+            isLoading.value = true;
+            error.value = null;
+
+            if (!authStore.isAuthenticated) {
+                throw new Error('User must be authenticated to create a station');
+            }
+
+            const response = await axios.post(`${apiBaseUrl}/charging-stations`, stationData, {
                 headers: getHeaders()
             });
-            stations.value.push(response.data);
-            toast.success('Station added successfully');
+
+            // Convert the response to match our frontend expectations
+            const newStation = {
+                ...response.data,
+                id: response.data._id,
+                _id: undefined
+            };
+
+            stations.value.push(newStation);
+            return newStation;
         } catch (err: any) {
             console.error('Error creating station:', err);
             error.value = err.response?.data?.message || 'Failed to create charging station';
-            toast.error(error.value);
+            throw err;
         } finally {
-            loading.value = false;
+            isLoading.value = false;
         }
-    }
+    };
 
-    async function updateStation(id: string, updates: Partial<ChargingStation>) {
-        loading.value = true;
-        error.value = null;
+    const updateStation = async (id: string, stationData: Partial<ChargingStation>) => {
         try {
-            const response = await api.put(`/api/charging-stations/${id}`, updates, {
+            isLoading.value = true;
+            error.value = null;
+
+            if (!authStore.isAuthenticated) {
+                throw new Error('User must be authenticated to update a station');
+            }
+
+            // Convert the data to match API expectations
+            const apiData = {
+                ...stationData,
+                _id: id,
+                id: undefined
+            };
+
+            console.log('Updating station with data:', JSON.stringify(apiData, null, 2));
+
+            const response = await axios.put(`${apiBaseUrl}/charging-stations/${id}`, apiData, {
                 headers: getHeaders()
             });
+
+            // Convert the response back to match our frontend expectations
+            const updatedStation = {
+                ...response.data,
+                id: response.data._id,
+                _id: undefined
+            };
+
             const index = stations.value.findIndex(s => s.id === id);
             if (index !== -1) {
-                stations.value[index] = response.data;
+                stations.value[index] = updatedStation;
             }
-            toast.success('Station updated successfully');
+            return updatedStation;
         } catch (err: any) {
             console.error('Error updating station:', err);
             error.value = err.response?.data?.message || 'Failed to update charging station';
-            toast.error(error.value);
+            throw err;
         } finally {
-            loading.value = false;
+            isLoading.value = false;
         }
-    }
+    };
 
-    async function deleteStation(id: string) {
-        loading.value = true;
-        error.value = null;
+    const deleteStation = async (id: string) => {
         try {
-            await api.delete(`/api/charging-stations/${id}`, {
+            isLoading.value = true;
+            error.value = null;
+
+            if (!authStore.isAuthenticated) {
+                throw new Error('User must be authenticated to delete a station');
+            }
+
+            await axios.delete(`${apiBaseUrl}/charging-stations/${id}`, {
                 headers: getHeaders()
             });
+
             stations.value = stations.value.filter(s => s.id !== id);
-            toast.success('Station deleted successfully');
         } catch (err: any) {
             console.error('Error deleting station:', err);
             error.value = err.response?.data?.message || 'Failed to delete charging station';
-            toast.error(error.value);
+            throw err;
         } finally {
-            loading.value = false;
+            isLoading.value = false;
         }
-    }
+    };
 
     const getStation = async (id: string | undefined) => {
         console.log('chargingStations.ts: getStation called with ID:', id, 'type:', typeof id);
@@ -131,14 +231,14 @@ export const useChargingStationsStore = defineStore('chargingStations', () => {
         }
 
         try {
-            loading.value = true;
+            isLoading.value = true;
             error.value = null;
 
             if (!authStore.isAuthenticated) {
                 throw new Error('User must be authenticated to get a station');
             }
 
-            const response = await api.get(`/api/charging-stations/${id}`, {
+            const response = await axios.get(`${apiBaseUrl}/charging-stations/${id}`, {
                 headers: getHeaders()
             });
 
@@ -148,7 +248,7 @@ export const useChargingStationsStore = defineStore('chargingStations', () => {
             error.value = err.response?.data?.message || 'Failed to fetch charging station';
             throw err;
         } finally {
-            loading.value = false;
+            isLoading.value = false;
         }
     };
 
@@ -190,10 +290,10 @@ export const useChargingStationsStore = defineStore('chargingStations', () => {
         stations,
         selectedStation,
         filters,
-        loading,
+        isLoading,
         error,
         fetchStations,
-        addStation,
+        createStation,
         updateStation,
         deleteStation,
         getStation,
