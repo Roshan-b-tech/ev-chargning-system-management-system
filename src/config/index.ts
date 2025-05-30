@@ -25,5 +25,5 @@ export const powerOutputOptions = [
     { min: 350, max: 1000, label: 'Ultra-Fast (350+ kW)' }
 ];
 
-// Force the full URL without using environment variables
-export const apiBaseUrl = 'https://ev-chargning-system-management-system.onrender.com/api'; 
+// Use environment variable for API base URL
+export const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://ev-chargning-system-management-system.onrender.com'; 
