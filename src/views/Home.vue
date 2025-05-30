@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useChargingStationStore } from '../stores/chargingStations.ts';
+import { useChargingStationsStore } from '../stores/chargingStations.ts';
 import { useAuthStore } from '../stores/auth';
 
 const router = useRouter();
-const stationStore = useChargingStationStore();
+const stationStore = useChargingStationsStore();
 const authStore = useAuthStore();
 
 const stationCount = computed(() => stationStore.stations.length);
@@ -13,7 +13,7 @@ const stationCount = computed(() => stationStore.stations.length);
 onMounted(async () => {
   console.log('Home onMounted hook fired.');
   console.log('Auth state:', authStore.isAuthenticated, authStore.isInitialized);
-  console.log('Station store state on mount:', stationStore.stations.length, stationStore.isLoading);
+  console.log('Station store state on mount:', stationStore.stations.length, stationStore.loading);
 
   if (!authStore.isAuthenticated) {
      console.log('User not authenticated, redirecting to login.');
@@ -21,7 +21,7 @@ onMounted(async () => {
      return;
   }
 
-  if (stationStore.stations.length === 0 && !stationStore.isLoading) {
+  if (stationStore.stations.length === 0 && !stationStore.loading) {
     console.log('Stations not loaded, fetching...');
     try {
       await stationStore.fetchStations();
@@ -114,10 +114,10 @@ onMounted(async () => {
     <!-- Stats Section -->
     <section class="py-12 bg-neutral-100">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div v-if="stationStore.isLoading" class="flex justify-center items-center min-h-[100px]">
+        <div v-if="stationStore.loading" class="flex justify-center items-center min-h-[100px]">
           <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
-        <div v-else-if="stationStore.stations.length === 0 && !stationStore.isLoading" class="text-center py-6 text-neutral-600">
+        <div v-else-if="stationStore.stations.length === 0 && !stationStore.loading" class="text-center py-6 text-neutral-600">
            No station data available.
         </div>
         <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">

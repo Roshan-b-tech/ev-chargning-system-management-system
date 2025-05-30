@@ -5,6 +5,14 @@ import { useToast } from 'vue-toastification'
 import { useRouter } from 'vue-router'
 import { apiBaseUrl } from '../config'
 
+// Create axios instance with base URL
+const api = axios.create({
+  baseURL: 'https://ev-chargning-system-management-system.onrender.com',
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
 export interface User {
   id: string
   email: string
@@ -27,7 +35,7 @@ export const useAuthStore = defineStore('auth', () => {
       const storedToken = localStorage.getItem('token')
       if (storedToken) {
         token.value = storedToken
-        const response = await axios.get(`${apiBaseUrl}/auth/me`, getHeaders())
+        const response = await api.get('/api/auth/me', getHeaders())
         user.value = response.data
       }
     } catch (error) {
@@ -74,8 +82,8 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(email: string, password: string) {
     loading.value = true;
     try {
-      console.log('Attempting login with:', { email, apiBaseUrl });
-      const response = await axios.post(`${apiBaseUrl}/auth/login`, {
+      console.log('Attempting login to:', api.defaults.baseURL);
+      const response = await api.post('/api/auth/login', {
         email,
         password
       });
@@ -91,7 +99,15 @@ export const useAuthStore = defineStore('auth', () => {
       router.push('/dashboard');
       return userData;
     } catch (error: any) {
-      console.error('Login error:', error.response?.data || error);
+      console.error('Login error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url,
+        method: error.config?.method,
+        baseURL: error.config?.baseURL,
+        headers: error.config?.headers
+      });
       const message = error.response?.data?.message || 'Login failed';
       toast.error(message);
       throw new Error(message);
@@ -104,8 +120,7 @@ export const useAuthStore = defineStore('auth', () => {
     if (!token.value) return null
 
     try {
-      const response = await axios.get(`${apiBaseUrl}/auth/me`, getHeaders())
-
+      const response = await api.get('/api/auth/me', getHeaders())
       user.value = response.data
       return response.data
     } catch (error) {
