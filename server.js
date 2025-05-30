@@ -34,8 +34,17 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
+// API Routes
+const apiRouter = express.Router();
+
+// Health check endpoint
+apiRouter.get('/health', (req, res) => {
+    res.json({ status: 'ok', message: 'API is running' });
+});
+
 // Auth Routes
-app.post('/api/auth/login', async (req, res) => {
+apiRouter.post('/auth/login', async (req, res) => {
+    console.log('Login attempt:', req.body); // Debug log
     try {
         const { username, password } = req.body;
 
@@ -72,14 +81,26 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+// Mount API routes
+app.use('/api', apiRouter);
+
 // Serve static files from the dist directory
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Handle all routes by serving index.html
+// Handle all other routes by serving index.html
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Server error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+});
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+    console.log('API endpoints:');
+    console.log('- POST /api/auth/login');
+    console.log('- GET /api/health');
 }); 
