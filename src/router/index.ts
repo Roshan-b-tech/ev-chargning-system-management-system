@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { useChargingStationStore } from '../stores/chargingStations.ts'
+import { useChargingStationStore } from '../stores/chargingStation'
 import type { AxiosError } from 'axios'
 import { useToast } from 'vue-toastification'
 
@@ -52,13 +52,13 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/station/add',
+      path: '/add-station',
       name: 'add-station',
       component: AddEditStation,
       meta: { requiresAuth: true }
     },
     {
-      path: '/station/:id/edit',
+      path: '/edit-station/:id',
       name: 'edit-station',
       component: AddEditStation,
       meta: { requiresAuth: true },
