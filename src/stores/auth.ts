@@ -74,20 +74,26 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(email: string, password: string) {
     loading.value = true;
     try {
+      console.log('Attempting login with:', { email, apiBaseUrl });
       const response = await axios.post(`${apiBaseUrl}/auth/login`, {
         email,
         password
       });
 
+      console.log('Login response:', response.data);
       const { token: newToken, user: userData } = response.data;
       token.value = newToken;
       user.value = userData;
       localStorage.setItem('token', newToken);
       isInitialized.value = true;
 
+      toast.success('Login successful!');
+      router.push('/dashboard');
       return userData;
     } catch (error: any) {
+      console.error('Login error:', error.response?.data || error);
       const message = error.response?.data?.message || 'Login failed';
+      toast.error(message);
       throw new Error(message);
     } finally {
       loading.value = false;
