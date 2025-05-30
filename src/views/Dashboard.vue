@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { useChargingStationStore } from '../stores/chargingStations.ts';
+import { useChargingStationsStore } from '../stores/chargingStations.ts';
 import { useAuthStore } from '../stores/auth';
 import type { ChargingStation } from '../types/chargingStation';
 
 const router = useRouter();
-const stationStore = useChargingStationStore();
+const stationStore = useChargingStationsStore();
 const authStore = useAuthStore();
 
 const stats = ref({
