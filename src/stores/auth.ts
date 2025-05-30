@@ -5,6 +5,14 @@ import { useToast } from 'vue-toastification'
 import { useRouter } from 'vue-router'
 import { apiBaseUrl } from '../config'
 
+// Create axios instance with base URL
+const api = axios.create({
+  baseURL: 'https://ev-chargning-system-management-system.onrender.com',
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
 export interface User {
   id: string
   email: string
@@ -27,7 +35,7 @@ export const useAuthStore = defineStore('auth', () => {
       const storedToken = localStorage.getItem('token')
       if (storedToken) {
         token.value = storedToken
-        const response = await axios.get(`${apiBaseUrl}/auth/me`, getHeaders())
+        const response = await api.get('/api/auth/me', getHeaders())
         user.value = response.data
       }
     } catch (error) {
@@ -74,24 +82,10 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(email: string, password: string) {
     loading.value = true;
     try {
-      const fullUrl = `${apiBaseUrl}/auth/login`;
-      console.log('Full login URL:', fullUrl);
-      console.log('Request config:', {
-        url: fullUrl,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        data: { email, password }
-      });
-
-      const response = await axios.post(fullUrl, {
+      console.log('Attempting login to:', api.defaults.baseURL);
+      const response = await api.post('/api/auth/login', {
         email,
         password
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
       });
 
       console.log('Login response:', response.data);
@@ -126,7 +120,7 @@ export const useAuthStore = defineStore('auth', () => {
     if (!token.value) return null
 
     try {
-      const response = await axios.get(`${apiBaseUrl}/auth/me`, getHeaders())
+      const response = await api.get('/api/auth/me', getHeaders())
       user.value = response.data
       return response.data
     } catch (error) {
