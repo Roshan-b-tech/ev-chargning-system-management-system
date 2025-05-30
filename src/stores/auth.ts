@@ -74,8 +74,18 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(email: string, password: string) {
     loading.value = true;
     try {
-      console.log('Attempting login with:', { email, apiBaseUrl });
-      const response = await axios.post(`${apiBaseUrl}/auth/login`, {
+      const fullUrl = `${apiBaseUrl}/auth/login`;
+      console.log('Full login URL:', fullUrl);
+      console.log('Request config:', {
+        url: fullUrl,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        data: { email, password }
+      });
+
+      const response = await axios.post(fullUrl, {
         email,
         password
       }, {
@@ -101,7 +111,8 @@ export const useAuthStore = defineStore('auth', () => {
         data: error.response?.data,
         url: error.config?.url,
         method: error.config?.method,
-        baseURL: error.config?.baseURL
+        baseURL: error.config?.baseURL,
+        headers: error.config?.headers
       });
       const message = error.response?.data?.message || 'Login failed';
       toast.error(message);
