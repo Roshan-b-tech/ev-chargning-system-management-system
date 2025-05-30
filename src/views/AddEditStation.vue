@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router';
-import { useChargingStationStore } from '../stores/chargingStations.ts';
+import { useChargingStationsStore } from '../stores/chargingStations';
+import { useAuthStore } from '../stores/auth';
 import type { ChargingStation } from '../types/chargingStation';
 import { connectorTypes, stationStatusOptions } from '../config';
 import MapComponent from '../components/ui/MapComponent.vue';
@@ -9,7 +10,8 @@ import { useToast } from 'vue-toastification';
 
 const router = useRouter();
 const route = useRoute();
-const stationStore = useChargingStationStore();
+const stationStore = useChargingStationsStore();
+const authStore = useAuthStore();
 const toast = useToast();
 
 // Determine if we're editing or adding
@@ -196,7 +198,7 @@ const handleSubmit = async () => {
       await stationStore.updateStation(stationId.value, station.value);
       toast.success('Station updated successfully');
     } else {
-      const result = await stationStore.createStation(station.value);
+      const result = await stationStore.addStation(station.value);
       console.log('Station creation result:', result); // Debug log
       toast.success('New station added successfully');
     }

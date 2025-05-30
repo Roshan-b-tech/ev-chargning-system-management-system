@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useChargingStationStore } from '../stores/chargingStations';
+import { useChargingStationsStore } from '../stores/chargingStations';
 import { useAuthStore } from '../stores/auth';
 import StationCard from '../components/ui/StationCard.vue';
 import StationFilters from '../components/ui/StationFilters.vue';
@@ -9,7 +9,7 @@ import { useToast } from 'vue-toastification';
 import MapComponent from '../components/ui/MapComponent.vue';
 
 const router = useRouter();
-const stationStore = useChargingStationStore();
+const stationStore = useChargingStationsStore();
 const authStore = useAuthStore();
 const toast = useToast();
 
