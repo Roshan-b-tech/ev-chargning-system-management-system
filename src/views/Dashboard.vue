@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { useChargingStationsStore } from '../stores/chargingStations.ts';
+import { useChargingStationsStore } from '../stores/chargingStations';
 import { useAuthStore } from '../stores/auth';
 import type { ChargingStation } from '../types/chargingStation';
 
@@ -41,7 +41,7 @@ const recentStations = computed(() => {
 onMounted(async () => {
   console.log('Dashboard onMounted hook fired.');
   console.log('Auth state:', authStore.isAuthenticated, authStore.isInitialized);
-  console.log('Station store state on mount:', stationStore.stations.length, stationStore.isLoading);
+  console.log('Station store state on mount:', stationStore.stations.length, stationStore.loading);
 
   if (!authStore.isAuthenticated) {
     console.log('User not authenticated, redirecting to login.');
@@ -49,7 +49,7 @@ onMounted(async () => {
     return;
   }
 
-  if (stationStore.stations.length === 0 && !stationStore.isLoading) {
+  if (stationStore.stations.length === 0 && !stationStore.loading) {
     console.log('Stations not loaded, fetching...');
     try {
       await stationStore.fetchStations();
@@ -86,11 +86,11 @@ const navigateToStationMap = () => {
 
 <template>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div v-if="stationStore.isLoading" class="flex justify-center items-center min-h-[300px]">
+    <div v-if="stationStore.loading" class="flex justify-center items-center min-h-[300px]">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
     </div>
 
-    <div v-else-if="stationStore.stations.length === 0 && !stationStore.isLoading" class="text-center py-12">
+    <div v-else-if="stationStore.stations.length === 0 && !stationStore.loading" class="text-center py-12">
       <p class="text-gray-600">No charging stations found.</p>
       <button @click="navigateToAddStation" class="mt-4 btn-primary">Add Your First Station</button>
     </div>
