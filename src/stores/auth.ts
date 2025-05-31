@@ -62,7 +62,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function register(email: string, password: string) {
     loading.value = true
     try {
-      const response = await axios.post(`${apiBaseUrl}/auth/register`, {
+      const response = await api.post('/api/auth/register', {
         email,
         password
       })
@@ -71,6 +71,15 @@ export const useAuthStore = defineStore('auth', () => {
       router.push('/login')
       return response.data
     } catch (error: any) {
+      console.error('Registration error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url,
+        method: error.config?.method,
+        baseURL: error.config?.baseURL,
+        headers: error.config?.headers
+      });
       const message = error.response?.data?.message || 'Registration failed'
       toast.error(message)
       throw error
