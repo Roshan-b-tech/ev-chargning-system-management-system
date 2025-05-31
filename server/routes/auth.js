@@ -12,9 +12,23 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 // User schema for MongoDB
 const userSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true }
-});
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true
+  },
+  password: {
+    type: String,
+    required: true
+  }
+}, { timestamps: true });
+
+// Drop any existing indexes to remove the username index
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ username: 1 }, { unique: false }); // Remove this index if it exists
+
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 // Register a new user
@@ -137,6 +151,18 @@ router.get('/me', authenticateJWT, async (req, res) => {
   } catch (error) {
     console.error('Get user error:', error);
     res.status(500).json({ message: 'Server error getting user data', error: error.message });
+  }
+});
+
+// Cleanup endpoint to reset users collection
+router.post('/cleanup', async (req, res) => {
+  try {
+    await User.collection.drop();
+    console.log('Users collection dropped successfully');
+    res.json({ message: 'Users collection reset successfully' });
+  } catch (error) {
+    console.error('Cleanup error:', error);
+    res.status(500).json({ message: 'Error resetting users collection', error: error.message });
   }
 });
 
