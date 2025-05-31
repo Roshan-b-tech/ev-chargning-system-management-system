@@ -20,27 +20,55 @@ const User = mongoose.models.User || mongoose.model('User', userSchema);
 // Register a new user
 router.post('/register', async (req, res) => {
   try {
+    console.log('Registration request received:', { body: req.body });
+
     const { email, password } = req.body;
     if (!email || !password) {
+      console.log('Missing email or password:', { email: !!email, password: !!password });
       return res.status(400).json({ message: 'Email and password are required' });
     }
+
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      console.log('User already exists:', { email });
       return res.status(400).json({ message: 'User already exists' });
     }
+
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+
     // Create new user
-    const newUser = await User.create({ email, password: hashedPassword });
+    console.log('Creating new user:', { email });
+    const newUser = await User.create({
+      email,
+      password: hashedPassword
+    });
+
+    console.log('User created successfully:', { userId: newUser._id });
     res.status(201).json({
       message: 'User registered successfully',
       user: { id: newUser._id, email: newUser.email }
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ message: 'Server error during registration', error: error.message });
+    console.error('Registration error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      code: error.code
+    });
+
+    // Check for specific MongoDB errors
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Email already exists' });
+    }
+
+    res.status(500).json({
+      message: 'Server error during registration',
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 

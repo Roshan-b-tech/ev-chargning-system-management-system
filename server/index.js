@@ -27,10 +27,31 @@ app.use(express.json());
 const connectDB = async () => {
   try {
     const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://roshangehlot500:roshan999@emailreminder.ibdudgs.mongodb.net/?retryWrites=true&w=majority&appName=emailReminder';
-    await mongoose.connect(mongoURI);
-    console.log('Connected to MongoDB');
+    console.log('Attempting to connect to MongoDB...');
+
+    const options = {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    };
+
+    await mongoose.connect(mongoURI, options);
+    console.log('Connected to MongoDB successfully');
+
+    // Log connection state
+    console.log('MongoDB connection state:', {
+      readyState: mongoose.connection.readyState,
+      host: mongoose.connection.host,
+      name: mongoose.connection.name
+    });
   } catch (err) {
-    console.error('MongoDB connection error:', err);
+    console.error('MongoDB connection error details:', {
+      name: err.name,
+      message: err.message,
+      code: err.code,
+      stack: err.stack
+    });
     process.exit(1); // Exit if cannot connect to database
   }
 };
