@@ -25,11 +25,25 @@ const userSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-// Drop any existing indexes to remove the username index
-userSchema.index({ email: 1 }, { unique: true });
-userSchema.index({ username: 1 }, { unique: false }); // Remove this index if it exists
+// Function to ensure correct indexes
+const ensureIndexes = async () => {
+  try {
+    // Drop all existing indexes
+    await mongoose.connection.collection('users').dropIndexes();
+    console.log('Dropped all existing indexes');
+
+    // Create only the email index
+    await mongoose.connection.collection('users').createIndex({ email: 1 }, { unique: true });
+    console.log('Created email index');
+  } catch (error) {
+    console.error('Error managing indexes:', error);
+  }
+};
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);
+
+// Call ensureIndexes when the model is created
+ensureIndexes();
 
 // Register a new user
 router.post('/register', async (req, res) => {
@@ -157,8 +171,13 @@ router.get('/me', authenticateJWT, async (req, res) => {
 // Cleanup endpoint to reset users collection
 router.post('/cleanup', async (req, res) => {
   try {
+    // Drop the entire collection
     await User.collection.drop();
     console.log('Users collection dropped successfully');
+
+    // Recreate the collection with correct indexes
+    await ensureIndexes();
+
     res.json({ message: 'Users collection reset successfully' });
   } catch (error) {
     console.error('Cleanup error:', error);
