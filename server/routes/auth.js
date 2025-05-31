@@ -28,29 +28,55 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      console.log('User already exists:', { email });
-      return res.status(400).json({ message: 'User already exists' });
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Invalid email format' });
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    // Validate password length
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    }
 
-    // Create new user
-    console.log('Creating new user:', { email });
-    const newUser = await User.create({
-      email,
-      password: hashedPassword
-    });
+    try {
+      // Check if user already exists
+      const existingUser = await User.findOne({ email: email.toLowerCase() });
+      if (existingUser) {
+        console.log('User already exists:', { email });
+        return res.status(400).json({ message: 'Email already registered' });
+      }
 
-    console.log('User created successfully:', { userId: newUser._id });
-    res.status(201).json({
-      message: 'User registered successfully',
-      user: { id: newUser._id, email: newUser.email }
-    });
+      // Hash password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      // Create new user with lowercase email
+      console.log('Creating new user:', { email });
+      const newUser = await User.create({
+        email: email.toLowerCase(),
+        password: hashedPassword
+      });
+
+      console.log('User created successfully:', { userId: newUser._id });
+      res.status(201).json({
+        message: 'User registered successfully',
+        user: { id: newUser._id, email: newUser.email }
+      });
+    } catch (dbError) {
+      console.error('Database operation error:', {
+        name: dbError.name,
+        message: dbError.message,
+        code: dbError.code
+      });
+
+      // Handle duplicate key error
+      if (dbError.code === 11000) {
+        return res.status(400).json({ message: 'Email already registered' });
+      }
+
+      throw dbError; // Re-throw other database errors
+    }
   } catch (error) {
     console.error('Registration error details:', {
       name: error.name,
@@ -58,11 +84,6 @@ router.post('/register', async (req, res) => {
       stack: error.stack,
       code: error.code
     });
-
-    // Check for specific MongoDB errors
-    if (error.code === 11000) {
-      return res.status(400).json({ message: 'Email already exists' });
-    }
 
     res.status(500).json({
       message: 'Server error during registration',
