@@ -23,10 +23,19 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://roshangehlot500:roshan999@emailreminder.ibdudgs.mongodb.net/?retryWrites=true&w=majority&appName=emailReminder')
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// Connect to MongoDB with better error handling
+const connectDB = async () => {
+  try {
+    const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://roshangehlot500:roshan999@emailreminder.ibdudgs.mongodb.net/?retryWrites=true&w=majority&appName=emailReminder';
+    await mongoose.connect(mongoURI);
+    console.log('Connected to MongoDB');
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+    process.exit(1); // Exit if cannot connect to database
+  }
+};
+
+connectDB();
 
 // Add test data endpoint
 app.post('/api/seed-data', async (req, res) => {
@@ -58,6 +67,7 @@ app.post('/api/seed-data', async (req, res) => {
     await ChargingStation.insertMany(testStations);
     res.json({ message: "Test data added successfully" });
   } catch (error) {
+    console.error('Seed data error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -68,7 +78,11 @@ app.use('/api/charging-stations', authenticateJWT, stationRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'API is running' });
+  res.json({
+    status: 'ok',
+    message: 'API is running',
+    mongoStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
 });
 
 // Root route
@@ -78,8 +92,12 @@ app.get('/', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!', error: err.message });
+  console.error('Error:', err);
+  res.status(500).json({
+    message: 'Something went wrong!',
+    error: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
 });
 
 // Start server
