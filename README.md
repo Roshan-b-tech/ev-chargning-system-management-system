@@ -1,3 +1,5 @@
+![EV Charging Dashboard](public/readme.png.png)
+
 # EV Charging Station Management System
 
 A full-stack application for managing electric vehicle charging stations, built with Vue.js, Node.js, Express, and MongoDB.
@@ -82,6 +84,159 @@ The application will be available at:
 - `POST /api/charging-stations` - Create new station
 - `PUT /api/charging-stations/:id` - Update station
 - `DELETE /api/charging-stations/:id` - Delete station
+
+## Detailed API Documentation
+
+Base URL: `https://ev-chargning-system-management-system.onrender.com`
+
+### Authentication APIs
+
+#### Register User
+- **Method**: POST
+- **Endpoint**: `/api/auth/register`
+- **Body**:
+```json
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+```
+
+#### Login
+- **Method**: POST
+- **Endpoint**: `/api/auth/login`
+- **Body**:
+```json
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+```
+
+#### Get Current User
+- **Method**: GET
+- **Endpoint**: `/api/auth/me`
+- **Headers**: `Authorization: Bearer <token>`
+
+#### Cleanup Users Collection
+- **Method**: POST
+- **Endpoint**: `/api/auth/cleanup`
+
+### Charging Station APIs (All require authentication)
+
+#### Get All Stations
+- **Method**: GET
+- **Endpoint**: `/api/charging-stations`
+- **Headers**: `Authorization: Bearer <token>`
+
+#### Get Single Station
+- **Method**: GET
+- **Endpoint**: `/api/charging-stations/:id`
+- **Headers**: `Authorization: Bearer <token>`
+
+#### Create Station
+- **Method**: POST
+- **Endpoint**: `/api/charging-stations`
+- **Headers**: `Authorization: Bearer <token>`
+- **Body**:
+```json
+{
+  "name": "Downtown Station",
+  "location": {
+    "type": "Point",
+    "coordinates": [-73.935242, 40.730610]
+  },
+  "status": "Available",
+  "powerOutput": 50,
+  "connectorType": "Type 2"
+}
+```
+
+#### Update Station
+- **Method**: PUT
+- **Endpoint**: `/api/charging-stations/:id`
+- **Headers**: `Authorization: Bearer <token>`
+- **Body**:
+```json
+{
+  "name": "Updated Station Name",
+  "status": "In Use",
+  "powerOutput": 75
+}
+```
+
+#### Delete Station
+- **Method**: DELETE
+- **Endpoint**: `/api/charging-stations/:id`
+- **Headers**: `Authorization: Bearer <token>`
+
+### Utility APIs
+
+#### Health Check
+- **Method**: GET
+- **Endpoint**: `/api/health`
+
+#### Seed Test Data
+- **Method**: POST
+- **Endpoint**: `/api/seed-data`
+
+### Testing with Postman
+
+1. Import the following collection into Postman:
+```json
+{
+  "info": {
+    "name": "EV Charging System API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"test@example.com\",\"password\":\"password123\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"test@example.com\",\"password\":\"password123\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+2. Testing Steps:
+   - Register a new user using the register endpoint
+   - Login with the registered credentials to get the JWT token
+   - Use the token in the Authorization header for all protected routes
+   - Test the charging station endpoints
+   - Use the health check endpoint to verify API status
 
 ## Features in Detail
 
