@@ -1,4 +1,4 @@
-![EV Charging Dashboard](public/readme.png.png)
+![EV Charging Dashboard](public/readme.png)
 
 # EV Charging Station Management System
 
